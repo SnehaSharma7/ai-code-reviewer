@@ -1,0 +1,13 @@
+{
+  "strictMode": false,
+  "ignoreStylingAndLinterIssues": true,
+  "ignoredExtensions": [
+    ".md",
+    ".txt",
+    ".css",
+    ".scss",
+    ".less"
+  ],
+  "maxDiffChars": 120000,
+  "model": "gpt-4o-mini"
+}

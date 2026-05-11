@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitGuard AI Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --panel: #fffdf8;
+      --ink: #1f1f1f;
+      --muted: #6b665d;
+      --brand: #0a7f5a;
+      --brand-soft: #dff4ec;
+      --line: #d8d2c8;
+      --danger: #b2432f;
+      --ok: #266f3f;
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(31, 31, 31, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fff8df 0%, #f4f1ea 45%) no-repeat,
+        linear-gradient(140deg, #f4f1ea 0%, #eef2ea 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .header {
+      grid-column: span 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.92rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .stat .value {
+      margin-top: 8px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--ok);
+    }
+
+    .bad {
+      color: var(--danger);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      margin-top: 6px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .switch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .switch input {
+      width: auto;
+      transform: scale(1.2);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      background: var(--brand);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(0.95);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .history-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .history-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      padding: 4px 8px;
+      margin-left: 6px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    @media (max-width: 920px) {
+      .wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card header">
+      <div>
+        <h1>GitGuard AI Dashboard</h1>
+        <div class="sub">Monitor review quality, tune strictness, and inspect review history.</div>
+      </div>
+      <button id="refresh">Refresh</button>
+    </section>
+
+    <section class="card">
+      <h2>Review Stats</h2>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card">
+      <h2>Settings</h2>
+      <div class="switch">
+        <input type="checkbox" id="strictMode" />
+        <label for="strictMode">Strict mode (only medium/high impact findings)</label>
+      </div>
+      <div class="switch">
+        <input type="checkbox" id="ignoreStylingAndLinterIssues" />
+        <label for="ignoreStylingAndLinterIssues">Ignore styling and linter-only issues</label>
+      </div>
+      <label>
+        OpenAI model
+        <input id="model" placeholder="gpt-4o-mini" />
+      </label>
+      <label>
+        Max diff chars
+        <input id="maxDiffChars" type="number" min="5000" step="1000" />
+      </label>
+      <label>
+        Ignored extensions (comma separated)
+        <textarea id="ignoredExtensions" placeholder=".md,.txt,.css"></textarea>
+      </label>
+      <button id="saveSettings">Save settings</button>
+      <div class="status" id="settingsStatus"></div>
+    </section>
+
+    <section class="card" style="grid-column: span 2;">
+      <h2>Latest Reviews</h2>
+      <div id="history"></div>
+    </section>
+  </main>
+
+  <script>
+    const statsEl = document.getElementById("stats");
+    const historyEl = document.getElementById("history");
+    const settingsStatusEl = document.getElementById("settingsStatus");
+
+    function statCard(label, value, className = "") {
+      return `<div class="stat"><div class="label">${label}</div><div class="value ${className}">${value}</div></div>`;
+    }
+
+    function renderStats(stats) {
+      statsEl.innerHTML = [
+        statCard("Total Reviews", stats.total),
+        statCard("Successful", stats.successCount, "good"),
+        statCard("Failed", stats.failedCount, "bad"),
+        statCard("Success Rate", `${stats.successRate}%`, "good"),
+      ].join("");
+    }
+
+    function renderHistory(items) {
+      if (!items.length) {
+        historyEl.innerHTML = "<div class=\"sub\">No reviews recorded yet.</div>";
+        return;
+      }
+
+      historyEl.innerHTML = items.slice(0, 20).map((item) => `
+        <article class="history-item">
+          <strong>${item.repository} #${item.prNumber}</strong>
+          <span class="pill">${item.status}</span>
+          <div class="history-meta">Action: ${item.action || "n/a"} | ${new Date(item.createdAt).toLocaleString()}</div>
+          <div class="history-meta">Files: ${(item.analyzedFiles || []).length}</div>
+          ${item.reason ? `<div class="history-meta">Reason: ${item.reason}</div>` : ""}
+        </article>
+      `).join("");
+    }
+
+    function renderSettings(settings) {
+      document.getElementById("strictMode").checked = Boolean(settings.strictMode);
+      document.getElementById("ignoreStylingAndLinterIssues").checked = Boolean(settings.ignoreStylingAndLinterIssues);
+      document.getElementById("model").value = settings.model || "gpt-4o-mini";
+      document.getElementById("maxDiffChars").value = settings.maxDiffChars || 120000;
+      document.getElementById("ignoredExtensions").value = (settings.ignoredExtensions || []).join(",");
+    }
+
+    async function loadDashboard() {
+      const res = await fetch("/api/dashboard");
+      const data = await res.json();
+      renderStats(data.stats);
+      renderHistory(data.latestReviews);
+      renderSettings(data.settings);
+      settingsStatusEl.textContent = "Dashboard refreshed.";
+    }
+
+    async function saveSettings() {
+      settingsStatusEl.textContent = "Saving...";
+      const payload = {
+        strictMode: document.getElementById("strictMode").checked,
+        ignoreStylingAndLinterIssues: document.getElementById("ignoreStylingAndLinterIssues").checked,
+        model: document.getElementById("model").value.trim() || "gpt-4o-mini",
+        maxDiffChars: Number(document.getElementById("maxDiffChars").value) || 120000,
+        ignoredExtensions: document.getElementById("ignoredExtensions").value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      };
+
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        settingsStatusEl.textContent = "Failed to save settings.";
+        return;
+      }
+
+      settingsStatusEl.textContent = "Settings saved.";
+      await loadDashboard();
+    }
+
+    document.getElementById("refresh").addEventListener("click", loadDashboard);
+    document.getElementById("saveSettings").addEventListener("click", saveSettings);
+    loadDashboard().catch(() => {
+      settingsStatusEl.textContent = "Could not load dashboard.";
+    });
+  </script>
+</body>
+</html>
