@@ -7,6 +7,9 @@ const settingsSchema = new mongoose.Schema(
       default: false,
     },
 
+
+
+    
     ignoreStylingAndLinterIssues: {
       type: Boolean,
       default: true,
