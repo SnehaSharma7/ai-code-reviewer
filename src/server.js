@@ -41,8 +41,8 @@ function verifySignature(req) {
 
 app.post("/webhook", async (req, res) => {
   if (!verifySignature(req)) {
-    return res.status(401).send("Invalid signature");
-  }
+  return res.status(401).send("Invalid signature");
+}
 
   const event = req.headers["x-github-event"];
 
